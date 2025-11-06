@@ -1,4 +1,4 @@
-#include "include/varient.h"
+#include "include/varint.h"
 
 namespace tinyDB{
     // for encoding
