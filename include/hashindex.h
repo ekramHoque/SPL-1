@@ -5,6 +5,7 @@
 namespace tinyDB{
 
     class HashIndex{
+    public:
 
         std::unordered_map<std::string,size_t> indexTable;
 
