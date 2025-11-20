@@ -86,3 +86,67 @@ vector<uint8_t> FileManager::readRecord(const string &table,uint64_t offset){
 
 }
 
+void FileManager::writeMeta(const string &table, vector<pair<string,string>> &cols, const string &primaryCol){
+
+    fs::create_directories("data/" + table);
+    string filePath = "data/" + table +"/" + table + ".meta";
+
+    ofstream columnRecord(filePath);
+    if(!columnRecord){
+        cerr << "Error to write meta" << "/n";
+        return;
+    }
+
+    columnRecord << "COLUMN: " << cols.size() << "/n";
+
+    //write meta
+    for(auto &c : cols){
+        columnRecord << c.first << " " << c.second;
+
+        //for primary key
+        if(!primaryCol.empty() && c.first == primaryCol){
+            columnRecord << "PRIMARY";
+        }
+
+        columnRecord << "/n";
+    }
+}
+
+bool FileManager::readMeta(const string &table, vector <pair<string,string>> &cols,string &priamryCol){
+    //clear those
+    cols.clear();
+    priamryCol ="";
+
+    string filePath = "data/" + table +"/" + table + ".meta";
+    if(!fs::exists(filePath)) return false;
+
+    ifstream columnRecord(filePath);
+    if(!columnRecord){
+        cerr << "Error to Read meta" << "/n";
+        return false;
+    }
+
+    string line;
+
+    //read first line for column count
+    getline(columnRecord,line);
+
+    while(getline(columnRecord,line)){
+
+        if(line.empty()) continue;
+
+        istringstream iss (line);
+        string colName, colType, primaryK;
+        iss >> colName >> colType >> primaryK;
+
+        cols.push_back({colName,colType});
+
+        if(primaryK == "PRIMARY"){
+            priamryCol = colName;
+        }
+    }
+
+    return true;
+
+}
+
