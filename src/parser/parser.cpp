@@ -114,4 +114,56 @@ ParsedCommand Parser::parse(const std::string &input){
         return cmd;
     }
 
+    //cmd: SHOW TABLE tableName; OR SHOW tableName;
+
+    if(upperCaseInput.rfind("SHOW TABLE",0)==0 || upperCaseInput.rfind("SHOW",0)==0){
+
+        cmd.type = "SHOW";
+
+        std::regex showRegex(R"(SHOW\s+(TABLE\s+)?(\w+)\s*;*)",std::regex::icase);
+        std::smatch showInfo;
+
+        if(!std::regex_search(inputWithoutSpace,showInfo,showRegex)){
+            cmd.isValid = false;
+            cmd.error = "SHOW syntax";
+            return cmd;
+        }
+
+        cmd.table = trimSpace(showInfo[2].str());
+        return cmd;
+
+    }
+
+    //cmd: SELECT * FROM tableName WHERE column op value;
+    //cmd: SELECT * FROM tableName WHERE column between value1 AND value2;(later implement)
+
+    if(upperCaseInput.rfind("SELECT",0) == 0){
+        cmd.type = "SELECT";
+
+        //Regxe for search with between keyword
+        std::regex regXBetween(R"(SELECT\s+(.*)\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s+BETWEEN\s+(\"?.+\"?)\s+AND\s+(\"?.+\"?)\s*;*)",std::regex::icase);
+
+        //Regex for search with equal sign
+        std::regex regXEqual(R"(SELECT\s+(.*)\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*(\"?.+\"?)\s*;*)",std::regex::icase);
+
+        std::smatch searchInfoCmd;
+        if(std::regex_search(inputWithoutSpace,searchInfoCmd,regXBetween)){
+
+            cmd.table = trimSpace(searchInfoCmd[2].str());
+            cmd.whereColumn = trimSpace(searchInfoCmd[3].str());
+            std::string value1 = trimSpace(searchInfoCmd[4].str());
+            std::string value2 = trimSpace(searchInfoCmd[5].str());
+
+            if(value1.size() >= 2 && value1.front() =='/"' && value1.back() == '/"'){
+                value1 = value1.substr(1,value1.size()-2);
+            }
+
+            if(value2.size() >= 2 && value2.front() =='/"' && value2.back() == '/"'){
+                value2 = value2.substr(1,value2.size()-2);
+            }
+        }
+
+
+    }
+
 }
