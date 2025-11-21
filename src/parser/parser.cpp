@@ -147,6 +147,8 @@ ParsedCommand Parser::parse(const std::string &input){
         std::regex regXEqual(R"(SELECT\s+(.*)\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*(\"?.+\"?)\s*;*)",std::regex::icase);
 
         std::smatch searchInfoCmd;
+
+        //between
         if(std::regex_search(inputWithoutSpace,searchInfoCmd,regXBetween)){
 
             cmd.table = trimSpace(searchInfoCmd[2].str());
@@ -161,9 +163,35 @@ ParsedCommand Parser::parse(const std::string &input){
             if(value2.size() >= 2 && value2.front() =='/"' && value2.back() == '/"'){
                 value2 = value2.substr(1,value2.size()-2);
             }
-        }
 
+            cmd.whereValue1 = value1;
+            cmd.whereValue2 = value2;
+            cmd.op = "BETWEEN";
+            return cmd;
+        }else if(std::regex_search(inputWithoutSpace,searchInfoCmd,regXEqual)){//equal
+            
+            cmd.table = trimSpace(searchInfoCmd[2].str());
+            cmd.whereColumn = trimSpace(searchInfoCmd[3].str());
+            std::string value1 = trimSpace(searchInfoCmd[4].str());
+
+            if(value1.size() >= 2 && value1.front() =='/"' && value1.back() == '/"'){
+                value1 = value1.substr(1,value1.size()-2);
+            }
+
+            cmd.whereValue1 = value1;
+            cmd.op = "=";
+            return cmd;
+            
+        }else{
+
+            cmd.isValid = false;
+            cmd.error = "Inavalid search syntax";
+            return cmd;
+        }
 
     }
 
+    cmd.isValid = false;
+    cmd.error = "UNKHOWN COMMAND FOUND";
+    return cmd;
 }

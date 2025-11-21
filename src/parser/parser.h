@@ -16,7 +16,7 @@ struct ParsedCommand{
     std::string whereColumn;
     std::string whereValue1;
     std::string whereValue2;//for between condition(later implement) 
-    std::string op; // =, <, >, between(later implement)
+    std::string op; // =, between(later implement)
     std::string error;
 };
 
