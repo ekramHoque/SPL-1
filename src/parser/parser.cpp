@@ -6,12 +6,12 @@
 static std::string trimSpace(std::string input){
 
     //remove space in the last
-    while(input.empty() && isspace((unsigned char)input.back())){
+    while(!input.empty() && isspace((unsigned char)input.back())){
         input.pop_back();
     }
 
     //remove space at first
-    while(input.empty() && isspace((unsigned char)input.front())){
+    while(!input.empty() && isspace((unsigned char)input.front())){
         input.erase(input.begin());
     }
 
