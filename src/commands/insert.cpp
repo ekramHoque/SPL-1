@@ -2,13 +2,14 @@
 #include "file_manager.h"
 #include "varint.h"
 #include "hash_index.h"
-#include<cstring>
+#include <cstring>
+#include <iostream>
 
 static HashIndex globalHash;
 //b+
 
 static std::vector<uint8_t> encodeRecord(
-    const std::vector<std::pair<std::string,std::string>> &metaInfo,std::vector<std::string> &metaValues)
+    const std::vector<std::pair<std::string,std::string>> &metaInfo,const std::vector<std::string> &metaValues)
 {
     std::vector<uint8_t> bufferSpace;
 
@@ -74,5 +75,61 @@ static std::vector<uint8_t> encodeRecord(
 }
 
 void insertCmdExecute(const ParsedCommand &cmd,Commands::IndexMode mode){
+
+    std::vector<std::pair<std::string,std::string>> metaInfo;
+    std::string primaryColName;
+
+    if(!FileManager::readMeta(cmd.table,metaInfo,primaryColName)){
+        std::cout << "error to read meta(table not found)\n";
+        return;
+    }
+
+    if(cmd.values.size() != metaInfo.size()){
+        std::cout << "GIVE TABLE VALUE " << metaInfo.size() << "\n";
+    }
+
+    //load index from disk
+    globalHash.loadFromDisk(cmd.table);
+    //b+
+
+    if(!primaryColName.empty()){
+        int primaryIdx = -1;
+
+        for(size_t i =0 ; i< metaInfo.size();i++){
+            if(metaInfo[i].first == primaryColName){
+                primaryIdx = i;
+            }
+        }
+
+        if(primaryIdx >= 0){
+            std::string primaryKValue = cmd.values[primaryIdx];
+            auto checkExist = globalHash.findRecord(primaryColName,primaryKValue);
+            if(!checkExist.empty()){
+                std::cout << "Duplicate entry for primary key\n";
+                return;
+            }
+        }
+    }
+
+    auto buffer = encodeRecord(metaInfo,cmd.values);
+    uint64_t offset = FileManager::appendRecord(cmd.table,buffer);
+
+    //update index
+
+    for(size_t i=0;i<metaInfo.size();i++){
+        std::string colName = metaInfo[i].first;
+        std::string colType = metaInfo[i].second;
+        std::string colValue = cmd.values[i];
+
+        globalHash.addRecord(colName,colValue,offset);
+        //b+
+        
+    }
+
+    globalHash.saveToDisk(cmd.table);
+    //b+
+
+    std::cout << "Insertes succesfully at offset " <<offset <<"\n";
+
 
 }
