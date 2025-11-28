@@ -22,5 +22,5 @@ struct ParsedCommand{
 
 class Parser{
     public:
-        ParsedCommand parse(const std::string &input);
+        static ParsedCommand parse(const std::string &input);
 };
