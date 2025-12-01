@@ -93,11 +93,11 @@ void FileManager::writeMeta(const string &table, vector<pair<string,string>> &co
 
     ofstream columnRecord(filePath);
     if(!columnRecord){
-        cerr << "Error to write meta" << "/n";
+        cerr << "Error to write meta" << "\n";
         return;
     }
 
-    columnRecord << "COLUMN: " << cols.size() << "/n";
+    columnRecord << "COLUMN: " << cols.size() << "\n";
 
     //write meta
     for(auto &c : cols){
@@ -108,21 +108,21 @@ void FileManager::writeMeta(const string &table, vector<pair<string,string>> &co
             columnRecord << "PRIMARY";
         }
 
-        columnRecord << "/n";
+        columnRecord << "\n";
     }
 }
 
-bool FileManager::readMeta(const string &table, vector <pair<string,string>> &cols,string &priamryCol){
+bool FileManager::readMeta(const string &table, vector <pair<string,string>> &cols,string &primaryCol){
     //clear those
     cols.clear();
-    priamryCol ="";
+    primaryCol ="";
 
     string filePath = "data/" + table +"/" + table + ".meta";
     if(!fs::exists(filePath)) return false;
 
     ifstream columnRecord(filePath);
     if(!columnRecord){
-        cerr << "Error to Read meta" << "/n";
+        cerr << "Error to Read meta" << "\n";
         return false;
     }
 
@@ -142,7 +142,7 @@ bool FileManager::readMeta(const string &table, vector <pair<string,string>> &co
         cols.push_back({colName,colType});
 
         if(primaryK == "PRIMARY"){
-            priamryCol = colName;
+            primaryCol = colName;
         }
     }
 

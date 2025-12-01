@@ -2,13 +2,17 @@
 #include <filesystem>
 #include<fstream>
 #include<iostream>
+#include "utils.h"
 
 using namespace std;
 namespace fs = std::filesystem;
 
 void HashIndex::addRecord(const string &col,const string &value,uint64_t offset){
 
-    idx[col][value].push_back(offset);
+    string trimmedValue = trimSpaceC(value);
+    string trimmedCol = trimSpaceC(col);
+
+    idx[trimmedCol][trimmedValue].push_back(offset);
 
     //save like this
 
@@ -26,9 +30,12 @@ void HashIndex::addRecord(const string &col,const string &value,uint64_t offset)
 vector<uint64_t> HashIndex::findRecord(const string &col, const string &value){
 
     //check column name and value exist or not
-    if(idx.count(col) && idx[col].count(value)){
+    string trimmedValue = trimSpaceC(value);
+    string trimmedCol = trimSpaceC(col);
+    
+    if(idx.count(trimmedCol) && idx[trimmedCol].count(trimmedValue)){
         //if exist return offset
-        return idx[col][value]; 
+        return idx[trimmedCol][trimmedValue]; 
     }
 
     return {}; //return empty vector if not exist

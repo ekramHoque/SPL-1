@@ -24,7 +24,7 @@ ParsedCommand Parser::parse(const std::string &input){
     std::string inputWithoutSpace = trimSpace(input);
 
     if(inputWithoutSpace.empty()){
-        cmd.isValid = "false";
+        cmd.isValid = false;
         cmd.error = "empty string";
         return cmd;
     }
@@ -42,7 +42,7 @@ ParsedCommand Parser::parse(const std::string &input){
         //separate table name and column info
         std::smatch target;
         if(!regex_search(inputWithoutSpace,target,re)){
-            cmd.isValid = "false";
+            cmd.isValid = false;
             cmd.error = "CREATE Syntax";
             return cmd;
         }
@@ -106,7 +106,7 @@ ParsedCommand Parser::parse(const std::string &input){
         while(getline(allValues,separateValue,',')){
             separateValue = trimSpace(separateValue);
 
-            if(separateValue.size() >=2 && separateValue.front() == '/"' && separateValue.back() == '/"'){
+            if(separateValue.size() >=2 && separateValue.front() == '"' && separateValue.back() == '"'){
                 separateValue = separateValue.substr(1,separateValue.size()-2);
             }
             cmd.values.push_back(separateValue);
@@ -141,10 +141,10 @@ ParsedCommand Parser::parse(const std::string &input){
         cmd.type = "SELECT";
 
         //Regxe for search with between keyword
-        std::regex regXBetween(R"(SELECT\s+(.*)\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s+BETWEEN\s+(\"?.+\"?)\s+AND\s+(\"?.+\"?)\s*;*)",std::regex::icase);
+        std::regex regXBetween(R"(SELECT\s+(.*)\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s+BETWEEN\s+(\S+)\s+AND\s+(\S+))",std::regex::icase);
 
         //Regex for search with equal sign
-        std::regex regXEqual(R"(SELECT\s+(.*)\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*(\"?.+\"?)\s*;*)",std::regex::icase);
+        std::regex regXEqual(R"(SELECT\s+(.*)\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*(\S+))",std::regex::icase);
 
         std::smatch searchInfoCmd;
 
@@ -155,12 +155,17 @@ ParsedCommand Parser::parse(const std::string &input){
             cmd.whereColumn = trimSpace(searchInfoCmd[3].str());
             std::string value1 = trimSpace(searchInfoCmd[4].str());
             std::string value2 = trimSpace(searchInfoCmd[5].str());
+            
+            // Remove trailing semicolon if present
+            if(!value1.empty() && value1.back() == ';') value1.pop_back();
+            if(!value2.empty() && value2.back() == ';') value2.pop_back();
 
-            if(value1.size() >= 2 && value1.front() =='/"' && value1.back() == '/"'){
+            // Remove surrounding quotes
+            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
                 value1 = value1.substr(1,value1.size()-2);
             }
 
-            if(value2.size() >= 2 && value2.front() =='/"' && value2.back() == '/"'){
+            if(value2.size() >= 2 && value2.front() == '"' && value2.back() == '"'){
                 value2 = value2.substr(1,value2.size()-2);
             }
 
@@ -173,8 +178,12 @@ ParsedCommand Parser::parse(const std::string &input){
             cmd.table = trimSpace(searchInfoCmd[2].str());
             cmd.whereColumn = trimSpace(searchInfoCmd[3].str());
             std::string value1 = trimSpace(searchInfoCmd[4].str());
+            
+            // Remove trailing semicolon if present
+            if(!value1.empty() && value1.back() == ';') value1.pop_back();
 
-            if(value1.size() >= 2 && value1.front() =='/"' && value1.back() == '/"'){
+            // Remove surrounding quotes
+            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
                 value1 = value1.substr(1,value1.size()-2);
             }
 

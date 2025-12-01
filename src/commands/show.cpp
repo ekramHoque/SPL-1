@@ -9,7 +9,7 @@
 
 using namespace std;
 
-void insertCmdExecute(const ParsedCommand &cmd){
+void showCmdExecute(const ParsedCommand &cmd){
 
     std::vector<std::pair<std::string,std::string>> metaInfo;
     std::string primaryColName;

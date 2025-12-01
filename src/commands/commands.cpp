@@ -25,7 +25,7 @@ void Commands::execute(const ParsedCommand &cmd){
     if(cmd.type == "CREATE") return createCmdExecute(cmd);
     if(cmd.type == "INSERT") return insertCmdExecute(cmd,globalMode);
     if(cmd.type == "SHOW") return showCmdExecute(cmd);
-    if(cmd.type == "CREATE") return selectCmdExecute(cmd);
+    if(cmd.type == "SELECT") return selectCmdExecute(cmd);
 
     std::cout << "Not found this command\n";
 }
