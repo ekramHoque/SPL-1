@@ -274,7 +274,7 @@ Binary format mapping column values to file offsets:
             ┌─────────────────┐
             │ Save Index to   │ ◄─── Persist index to disk
             │   .hashidx      │
-            └─────────────────┘
+            └─────────────────┘Ekram
 ```
 
 ### SELECT Operation Flow
