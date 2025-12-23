@@ -85,7 +85,8 @@ void insertCmdExecute(const ParsedCommand &cmd,Commands::IndexMode mode){
     }
 
     if(cmd.values.size() != metaInfo.size()){
-        std::cout << "GIVE TABLE VALUE " << metaInfo.size() << "\n";
+        std::cout << "[ERROR] Expected " << metaInfo.size() << " values, but got " << cmd.values.size() << "\n";
+        return;
     }
 
     //load index from disk

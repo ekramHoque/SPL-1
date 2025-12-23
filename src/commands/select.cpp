@@ -13,12 +13,6 @@ static HashIndex globalHashSelect;
 
 static void printSingleRecord(const vector<uint8_t> &recordData, const vector<pair<string,string>> &metaInfo){
 
-    cout << "-------------------------------------------------\n";
-    for (auto &c: metaInfo){
-         cout << "| " << c.first << " ";
-    }   
-    cout << "\n-------------------------------------------------\n";
-
     size_t pos = 0;
     for (auto &col : metaInfo) {
         if (pos >= recordData.size()) { 
@@ -76,6 +70,13 @@ void selectCmdExecute(const ParsedCommand &cmd){
             cout << "[INFO] 0 matching records.\n";
             return;
         }
+
+        
+        cout << "-------------------------------------------------\n";
+        for (auto &c: metaInfo){
+             cout << "| " << c.first << " ";
+        }   
+        cout << "\n-------------------------------------------------\n";
 
         for(auto &off : offsets){
             auto recordData = FileManager::readRecord(cmd.table,off);
