@@ -98,14 +98,17 @@ void insertCmdExecute(const ParsedCommand &cmd,Commands::IndexMode mode){
         for(size_t i =0 ; i< metaInfo.size();i++){
             if(metaInfo[i].first == primaryColName){
                 primaryIdx = i;
+                break;
             }
         }
 
-        if(primaryIdx >= 0){
-            std::string primaryKValue = cmd.values[primaryIdx];
-            auto checkExist = globalHash.findRecord(primaryColName,primaryKValue);
+        if(primaryIdx >= 0 && primaryIdx < cmd.values.size()){
+            std::string primaryKeyValue = cmd.values[primaryIdx];
+            
+            auto checkExist = globalHash.findRecord(primaryColName, primaryKeyValue);
+            
             if(!checkExist.empty()){
-                std::cout << "Duplicate entry for primary key\n";
+                std::cout << "[ERROR] Duplicate entry for primary key: " << primaryColName << " = " << primaryKeyValue << "\n";
                 return;
             }
         }

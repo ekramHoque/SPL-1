@@ -105,7 +105,7 @@ void FileManager::writeMeta(const string &table, vector<pair<string,string>> &co
 
         //for primary key
         if(!primaryCol.empty() && c.first == primaryCol){
-            columnRecord << "PRIMARY";
+            columnRecord << " PRIMARY";
         }
 
         columnRecord << "\n";

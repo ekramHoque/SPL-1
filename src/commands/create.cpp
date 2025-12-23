@@ -2,8 +2,16 @@
 #include "file_manager.h"
 #include "utils.h"
 #include <iostream>
+#include <filesystem>
 
 void createCmdExecute(const ParsedCommand &cmd){
+
+    // Check if table already exists
+    std::string metaPath = "data/" + cmd.table + "/" + cmd.table + ".meta";
+    if(std::filesystem::exists(metaPath)){
+        std::cout << "[ERROR] Table '" << cmd.table << "' already exists\n";
+        return;
+    }
 
     std::string primaryKey = "";
     std::vector<std::pair<std::string,std::string>> cols = cmd.columns;
