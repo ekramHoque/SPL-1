@@ -2,11 +2,12 @@
 #include "file_manager.h"
 #include "varint.h"
 #include "hash_index.h"
+#include "bplusTree_index.h"
 #include <cstring>
 #include <iostream>
 
 static HashIndex globalHash;
-//b+
+static BPlusTreeIndex globalBPTree;
 
 static std::vector<uint8_t> encodeRecord(
     const std::vector<std::pair<std::string,std::string>> &metaInfo,const std::vector<std::string> &metaValues)
@@ -89,9 +90,12 @@ void insertCmdExecute(const ParsedCommand &cmd,Commands::IndexMode mode){
         return;
     }
 
-    //load index from disk
-    globalHash.loadFromDisk(cmd.table);
-    //b+
+    
+    if(mode == Commands::IndexMode::HASH){
+        globalHash.loadFromDisk(cmd.table);
+    }else if(mode == Commands::IndexMode::BPLUSTREE){
+        globalBPTree.loadFromDisk(cmd.table);
+    }
 
     if(!primaryColName.empty()){
         int primaryIdx = -1;
@@ -106,7 +110,14 @@ void insertCmdExecute(const ParsedCommand &cmd,Commands::IndexMode mode){
         if(primaryIdx >= 0 && primaryIdx < cmd.values.size()){
             std::string primaryKeyValue = cmd.values[primaryIdx];
             
-            auto checkExist = globalHash.findRecord(primaryColName, primaryKeyValue);
+            std::vector<uint64_t> checkExist;
+            if(mode == Commands::IndexMode::HASH){
+                checkExist = globalHash.findRecord(primaryColName, primaryKeyValue);
+            }else if(mode == Commands::IndexMode::BPLUSTREE){
+                // For B+Tree, create key: "columnName##value"
+                std::string key = primaryColName + "##" + primaryKeyValue;
+                checkExist = globalBPTree.search(key);
+            }
             
             if(!checkExist.empty()){
                 std::cout << "[ERROR] Duplicate entry for primary key: " << primaryColName << " = " << primaryKeyValue << "\n";
@@ -119,20 +130,25 @@ void insertCmdExecute(const ParsedCommand &cmd,Commands::IndexMode mode){
     uint64_t offset = FileManager::appendRecord(cmd.table,buffer);
 
     //update index
-
     for(size_t i=0;i<metaInfo.size();i++){
         std::string colName = metaInfo[i].first;
         std::string colType = metaInfo[i].second;
         std::string colValue = cmd.values[i];
 
-        globalHash.addRecord(colName,colValue,offset);
-        //b+
+        if(mode == Commands::IndexMode::HASH){
+            globalHash.addRecord(colName,colValue,offset);
+        }else if(mode == Commands::IndexMode::BPLUSTREE){
+            std::string key = colName + "##" + colValue;
+            globalBPTree.insert(key, offset);
+        }
         
     }
 
-    globalHash.saveToDisk(cmd.table);
-    //b+
-
+    if(mode == Commands::IndexMode::HASH){
+        globalHash.saveToDisk(cmd.table);
+    }else if(mode == Commands::IndexMode::BPLUSTREE){
+        globalBPTree.saveToDisk(cmd.table);
+    }
     std::cout << "Insertes succesfully at offset " <<offset <<"\n";
 
 

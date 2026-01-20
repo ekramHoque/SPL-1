@@ -1,0 +1,4 @@
+COLUMN: 3
+id INT
+name TEXT
+price INT

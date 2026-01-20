@@ -3,13 +3,14 @@
 #include "utils.h"
 #include "varint.h"
 #include "hash_index.h"
+#include "bplusTree_index.h"
 #include <iostream>
 #include <cstring>
 
 using namespace std;
 
 static HashIndex globalHashSelect;
-//b+
+static BPlusTreeIndex globalBPTreeSelect;
 
 static void printSingleRecord(const vector<uint8_t> &recordData, const vector<pair<string,string>> &metaInfo){
 
@@ -52,7 +53,7 @@ static void printSingleRecord(const vector<uint8_t> &recordData, const vector<pa
     cout << "\n";
 }
 
-void selectCmdExecute(const ParsedCommand &cmd){
+void selectCmdExecute(const ParsedCommand &cmd, Commands::IndexMode mode){
     vector<pair<string,string>> metaInfo;
     string primaryColName;
 
@@ -60,12 +61,25 @@ void selectCmdExecute(const ParsedCommand &cmd){
         cout << "error to read meta(table not found)\n";
         return;
     }
-    globalHashSelect.loadFromDisk(cmd.table);
-    //b+
+    
+    
+    if(mode == Commands::IndexMode::HASH){
+        globalHashSelect.loadFromDisk(cmd.table);
+    }else if(mode == Commands::IndexMode::BPLUSTREE){
+        globalBPTreeSelect.loadFromDisk(cmd.table);
+    }
 
     if(cmd.op == "="){
-        cout << "[INFO] Search for " << cmd.whereColumn << "\n";
-        auto offsets = globalHashSelect.findRecord(cmd.whereColumn,cmd.whereValue1);
+        cout << "[INFO] Search for " << cmd.whereColumn << " = " << cmd.whereValue1 << "\n";
+        
+        vector<uint64_t> offsets;
+        if(mode == Commands::IndexMode::HASH){
+            offsets = globalHashSelect.findRecord(cmd.whereColumn, cmd.whereValue1);
+        }else if(mode == Commands::IndexMode::BPLUSTREE){
+            string key = cmd.whereColumn + "##" + cmd.whereValue1;
+            offsets = globalBPTreeSelect.search(key);
+        }
+        
         if(offsets.empty()){
             cout << "[INFO] 0 matching records.\n";
             return;
@@ -83,10 +97,39 @@ void selectCmdExecute(const ParsedCommand &cmd){
             printSingleRecord(recordData,metaInfo);
         }
 
+    }else if(cmd.op == "BETWEEN"){
+        cout << "[INFO] Range search for " << cmd.whereColumn << " BETWEEN " 
+             << cmd.whereValue1 << " AND " << cmd.whereValue2 << "\n";
+        
+        vector<uint64_t> offsets;
+        if(mode == Commands::IndexMode::HASH){
+            cout << "[ERROR] BETWEEN not supported with Hash index. Use B+ Tree.\n";
+            return;
+        }else if(mode == Commands::IndexMode::BPLUSTREE){
+            string keyLow = cmd.whereColumn + "##" + cmd.whereValue1;
+            string keyHigh = cmd.whereColumn + "##" + cmd.whereValue2;
+            offsets = globalBPTreeSelect.rangeSearch(keyLow, keyHigh);
+        }
+        
+        if(offsets.empty()){
+            cout << "[INFO] 0 matching records.\n";
+            return;
+        }
+
+        cout << "-------------------------------------------------\n";
+        for (auto &c: metaInfo){
+             cout << "| " << c.first << " ";
+        }   
+        cout << "\n-------------------------------------------------\n";
+
+        for(auto &off : offsets){
+            auto recordData = FileManager::readRecord(cmd.table,off);
+            printSingleRecord(recordData,metaInfo);
+        }
+
     }else{
         cout << "[ERROR] Invalid SELECT operation\n";
     }
 
-    //b+
 }
 
