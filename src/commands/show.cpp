@@ -49,6 +49,29 @@ void showCmdExecute(const ParsedCommand &cmd){
         size_t readBytes = 0;
         uint64_t recordLength = Varint::decode(varIntFormatLen, 0, readBytes);
 
+        /* 
+        Tombstone format: [0x00][skip_bytes_varint][remaining_old_data]
+        If length is 0, read the skip varint and jump. If length > 0, read the record as normal.
+        */
+
+        if (recordLength == 0) {
+            vector<uint8_t> skipVarint;
+            for (int i=0; i<10; i++) {
+                char ch;
+                tableData.get(ch);
+                if (!tableData) break;
+                skipVarint.push_back(static_cast<uint8_t>(ch));
+                if (!(skipVarint.back() & 0x80)) break;
+            }
+            
+            if (!skipVarint.empty()) {
+                size_t skipReadBytes = 0;
+                uint64_t bytesToSkip = Varint::decode(skipVarint, 0, skipReadBytes);
+                tableData.seekg(bytesToSkip, ios::cur);
+            }
+            continue;
+        }
+
         vector<uint8_t> recordData(recordLength);
         if (recordLength>0) {
             tableData.read(reinterpret_cast<char*>(recordData.data()), recordLength);

@@ -196,6 +196,26 @@ vector<uint64_t> BPlusTreeIndex::rangeSearch(const string &low,const string &hig
     return allOffset;
 }
 
+void BPlusTreeIndex::deleteRecord(const string &key, uint64_t offset){
+    if(!root){
+        return;
+    }
+    
+    BPTreeNode* leaf = findLeaf(key);
+    if(!leaf){
+        return;
+    }
+    
+    for(size_t i = 0; i < leaf->keys.size(); i++){
+        if(leaf->keys[i] == key && leaf->values[i] == offset){
+            leaf->keys.erase(leaf->keys.begin() + i);
+            leaf->values.erase(leaf->values.begin() + i);
+            break;
+        }
+    }
+    
+}
+
 void BPlusTreeIndex::saveNodeToDisk(ofstream& out, BPTreeNode* node) {
 
     /*out format like this-
@@ -311,14 +331,14 @@ void BPlusTreeIndex::rebuildLeafLinks(BPTreeNode* node, BPTreeNode*& prevLeaf) {
     if (!node) return;
     
     if (node->isLeaf) {
-        // Link this leaf to the previous leaf
+        // Link leaf to previous leaf
         if (prevLeaf) {
             prevLeaf->next = node;
         }
         prevLeaf = node;
-        node->next = nullptr;  // Will be set by next leaf
+        node->next = nullptr;  
     } else {
-        // Traverse children in order (left to right)
+        // Traverse children left to right
         for (auto child : node->children) {
             rebuildLeafLinks(child, prevLeaf);
         }
@@ -346,7 +366,6 @@ void BPlusTreeIndex::loadFromDisk(const string &table) {
     if (!root) {
         root = new BPTreeNode(true);
     } else {
-        // Rebuild leaf node links for range queries
         BPTreeNode* prevLeaf = nullptr;
         rebuildLeafLinks(root, prevLeaf);
     }

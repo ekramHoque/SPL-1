@@ -37,6 +37,7 @@ class BPlusTreeIndex{
         void insert(const std::string &key, uint64_t offset);
         std::vector<uint64_t> search(const std::string &key);
         std::vector<uint64_t> rangeSearch(const std::string &low, const std::string &high);
+        void deleteRecord(const std::string &key, uint64_t offset);
         void saveToDisk(const std::string &tableName);
         void loadFromDisk(const std::string &tableName);
 

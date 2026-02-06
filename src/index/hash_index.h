@@ -11,6 +11,7 @@ class HashIndex{
 
         void addRecord(const std::string &col, const std::string &value, uint64_t offset);
         std::vector<uint64_t> findRecord(const std::string &col, const std::string &value);
+        void deleteRecord(const std::string &col, const std::string &value, uint64_t offset);
         void saveToDisk(const std::string &table);
         void loadFromDisk(const std::string &table);
 };

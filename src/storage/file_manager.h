@@ -13,6 +13,9 @@ class FileManager{
         //Reading record form table
         static std::vector<uint8_t> readRecord(const std::string &table, uint64_t offset);
 
+        //Mark record as deleted (tombstone approach)
+        static void markDeleted(const std::string &table, uint64_t offset);
+
         //for write meta
         static void writeMeta(const std::string &table, std::vector<std::pair<std::string,std::string>> &cols, const std::string &primaryCol = ""); 
 

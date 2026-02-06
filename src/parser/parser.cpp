@@ -200,6 +200,60 @@ ParsedCommand Parser::parse(const std::string &input){
 
     }
 
+    //cmd: DELETE FROM tableName WHERE column op value;
+    //cmd: DELETE FROM tableName WHERE column BETWEEN value1 AND value2;
+
+    if(upperCaseInput.rfind("DELETE",0) == 0){
+        cmd.type = "DELETE";
+        
+        std::regex regXBetween(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s+BETWEEN\s+(\S+)\s+AND\s+(\S+))",std::regex::icase);
+        std::regex regXEqual(R"(DELETE\s+FROM\s+(\w+)\s+WHERE\s+(\w+)\s*=\s*(\S+))",std::regex::icase);
+
+        std::smatch deleteInfoCmd;
+        if(std::regex_search(inputWithoutSpace,deleteInfoCmd,regXBetween)){//between
+            cmd.table = trimSpace(deleteInfoCmd[1].str());
+            cmd.whereColumn = trimSpace(deleteInfoCmd[2].str());
+            std::string value1 = trimSpace(deleteInfoCmd[3].str());
+            std::string value2 = trimSpace(deleteInfoCmd[4].str());
+            
+            if(!value1.empty() && value1.back() == ';') value1.pop_back();
+            if(!value2.empty() && value2.back() == ';') value2.pop_back();
+
+            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
+                value1 = value1.substr(1,value1.size()-2);
+            }
+
+            if(value2.size() >= 2 && value2.front() == '"' && value2.back() == '"'){
+                value2 = value2.substr(1,value2.size()-2);
+            }
+
+            cmd.whereValue1 = value1;
+            cmd.whereValue2 = value2;
+            cmd.op = "BETWEEN";
+            return cmd;
+        }else if(std::regex_search(inputWithoutSpace,deleteInfoCmd,regXEqual)){//equal
+            cmd.table = trimSpace(deleteInfoCmd[1].str());
+            cmd.whereColumn = trimSpace(deleteInfoCmd[2].str());
+            std::string value1 = trimSpace(deleteInfoCmd[3].str());
+            
+            if(!value1.empty() && value1.back() == ';') value1.pop_back();
+            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
+                value1 = value1.substr(1,value1.size()-2);
+            }
+
+            cmd.whereValue1 = value1;
+            cmd.op = "=";
+            return cmd;
+            
+        }else{
+
+            cmd.isValid = false;
+            cmd.error = "Invalid DELETE syntax";
+            return cmd;
+        }
+
+    }
+
     cmd.isValid = false;
     cmd.error = "UNKHOWN COMMAND FOUND";
     return cmd;

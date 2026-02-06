@@ -3,6 +3,7 @@
 #include "insert.h"
 #include "show.h"
 #include "select.h"
+#include "delete.h"
 #include "utils.h"
 #include <iostream>
 
@@ -26,6 +27,7 @@ void Commands::execute(const ParsedCommand &cmd){
     if(cmd.type == "INSERT") return insertCmdExecute(cmd,globalMode);
     if(cmd.type == "SHOW") return showCmdExecute(cmd);
     if(cmd.type == "SELECT") return selectCmdExecute(cmd, globalMode);
+    if(cmd.type == "DELETE") return deleteCmdExecute(cmd, globalMode);
 
     std::cout << "Not found this command\n";
 }

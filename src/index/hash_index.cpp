@@ -43,6 +43,29 @@ vector<uint64_t> HashIndex::findRecord(const string &col, const string &value){
 
 }
 
+void HashIndex::deleteRecord(const string &col, const string &value, uint64_t offset){
+    string trimmedValue = trimSpaceC(value);
+    string trimmedCol = trimSpaceC(col);
+    
+    // CHECK EXIST OR NOT
+    if(idx.count(trimmedCol) && idx[trimmedCol].count(trimmedValue)){
+        auto &offsetList = idx[trimmedCol][trimmedValue];
+        for(auto it = offsetList.begin(); it != offsetList.end(); ++it){
+            if(*it == offset){
+                offsetList.erase(it);
+                break;
+            }
+        }
+        if(offsetList.empty()){
+            idx[trimmedCol].erase(trimmedValue);
+        }
+        
+        if(idx[trimmedCol].empty()){
+            idx.erase(trimmedCol);
+        }
+    }
+}
+
 void HashIndex::saveToDisk(const string &table){
 
     fs::create_directories("data/" + table);
