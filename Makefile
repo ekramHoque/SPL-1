@@ -26,6 +26,7 @@ SOURCES = \
 	$(SRC_DIR)/commands/select.cpp \
 	$(SRC_DIR)/commands/show.cpp \
 	$(SRC_DIR)/commands/delete.cpp \
+	$(SRC_DIR)/commands/update.cpp \
 	$(SRC_DIR)/commands/utils.cpp \
 	$(SRC_DIR)/index/bplusTree_index.cpp \
 	$(SRC_DIR)/index/hash_index.cpp \

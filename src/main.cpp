@@ -53,6 +53,9 @@ int main(){
         auto cmd = Parser::parse(inputLine);
 
         if(cmd.isValid == false){
+            if(cmd.error == "comment line"){
+                continue;
+            }
             cout << "Error: " << cmd.error << "\n";
             continue;
         }

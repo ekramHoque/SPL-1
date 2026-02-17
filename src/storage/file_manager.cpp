@@ -89,6 +89,63 @@ vector<uint8_t> FileManager::readRecord(const string &table,uint64_t offset){
 
 }
 
+/*
+  Overwrite record at specific offset with new data
+  Used for in-place UPDATE operations
+  
+  Strategy:
+  Only allow in-place update if EXACT same size (varint + data)
+  This prevents any corruption of adjacent records.
+  For any size change, return false to trigger append + tombstone.
+ */
+bool FileManager::overwriteRecord(const string &table, uint64_t offset, vector<uint8_t> &records){
+
+    string filePath = "data/" + table + '/' + table +".data";
+    if(!fs::exists(filePath)){
+        cerr << "Data file not found" << endl;
+        return false;
+    }
+
+    fstream file(filePath, ios::binary | ios::in | ios::out);
+    if(!file){
+        cerr << "ERROR opening data file for update" << endl;
+        return false;  
+    }
+
+    file.seekg(offset);
+    vector<uint8_t> lengthBuffer;
+    
+    for(size_t i = 0; i < 10; ++i){ 
+        char c;
+        file.get(c);
+        lengthBuffer.push_back(static_cast<uint8_t>(c));
+        if((lengthBuffer.back() & 0x80) == 0){
+            break  ;  
+        }
+    }
+
+    size_t oldVarIntSize = 0;
+    uint64_t oldRecordLength = Varint::decode(lengthBuffer, 0, oldVarIntSize);
+    
+    auto newVarInt = Varint::encode(records.size());
+    uint64_t newVarIntSize = newVarInt.size();
+    
+    uint64_t oldTotalSize = oldVarIntSize + oldRecordLength;
+    uint64_t newTotalSize = newVarIntSize + records.size();
+    
+    if(newTotalSize == oldTotalSize){
+        file.seekp(offset);
+        file.write(reinterpret_cast<const char*>(newVarInt.data()), newVarIntSize);
+        file.write(reinterpret_cast<const char*>(records.data()), records.size());
+        file.close();
+        return true;
+    }
+    
+    file.close();
+    return false;
+    
+}
+
 void FileManager::markDeleted(const string &table, uint64_t offset){
 
     string filePath = "data/" + table + '/' + table +".data";

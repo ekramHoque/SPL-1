@@ -13,6 +13,9 @@ class FileManager{
         //Reading record form table
         static std::vector<uint8_t> readRecord(const std::string &table, uint64_t offset);
 
+        //Overwrite record at offset,Returns true if successful, false if record is smaller than space available
+        static bool overwriteRecord(const std::string &table, uint64_t offset, std::vector<uint8_t> &records);
+
         //Mark record as deleted (tombstone approach)
         static void markDeleted(const std::string &table, uint64_t offset);
 

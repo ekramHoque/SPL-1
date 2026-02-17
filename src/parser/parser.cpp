@@ -29,6 +29,13 @@ ParsedCommand Parser::parse(const std::string &input){
         return cmd;
     }
 
+    // Ignore comment lines starting with #
+    if(inputWithoutSpace[0] == '#'){
+        cmd.isValid = false;
+        cmd.error = "comment line";
+        return cmd;
+    }
+
     std::string upperCaseInput = inputWithoutSpace;
     std::transform(upperCaseInput.begin(),upperCaseInput.end(),upperCaseInput.begin(), ::toupper);
 
@@ -195,6 +202,135 @@ ParsedCommand Parser::parse(const std::string &input){
 
             cmd.isValid = false;
             cmd.error = "Inavalid search syntax";
+            return cmd;
+        }
+
+    }
+
+    //cmd: UPDATE tableName SET col1=val1, col2=val2, ... WHERE column op value;
+    //cmd: UPDATE tableName SET col1=val1 WHERE column BETWEEN value1 AND value2;
+
+    if(upperCaseInput.rfind("UPDATE",0) == 0){
+        cmd.type = "UPDATE";
+        
+        std::regex regXBetween(R"(UPDATE\s+(\w+)\s+SET\s+(.*)\s+WHERE\s+(\w+)\s+BETWEEN\s+(\S+)\s+AND\s+(\S+))",std::regex::icase);
+        std::regex regXEqual(R"(UPDATE\s+(\w+)\s+SET\s+(.*)\s+WHERE\s+(\w+)\s*=\s*(\S+))",std::regex::icase);
+
+        std::smatch updateInfoCmd;
+        if(std::regex_search(inputWithoutSpace,updateInfoCmd,regXBetween)){//between
+            cmd.table = trimSpace(updateInfoCmd[1].str());
+            std::string setClause = trimSpace(updateInfoCmd[2].str());
+            cmd.whereColumn = trimSpace(updateInfoCmd[3].str());
+            std::string value1 = trimSpace(updateInfoCmd[4].str());
+            std::string value2 = trimSpace(updateInfoCmd[5].str());
+            
+            if(!value1.empty() && value1.back() == ';') value1.pop_back();
+            if(!value2.empty() && value2.back() == ';') value2.pop_back();
+
+            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
+                value1 = value1.substr(1,value1.size()-2);
+            }
+
+            if(value2.size() >= 2 && value2.front() == '"' && value2.back() == '"'){
+                value2 = value2.substr(1,value2.size()-2);
+            }
+
+            cmd.whereValue1 = value1;
+            cmd.whereValue2 = value2;
+            cmd.op = "BETWEEN";
+            
+            // Parse SET clause: col1=val1, col2=val2, ...
+            size_t setPos = 0;
+            while(setPos < setClause.size()){
+                // Find column name
+                size_t eqPos = setClause.find('=', setPos);
+                if(eqPos == std::string::npos) break;
+                
+                std::string colName = trimSpace(setClause.substr(setPos, eqPos - setPos));
+                setPos = eqPos + 1;
+            
+                while(setPos < setClause.size() && isspace(setClause[setPos])) setPos++;
+                
+                std::string colValue;
+                if(setPos < setClause.size() && setClause[setPos] == '"'){
+                    setPos++; 
+                    size_t closeQuote = setClause.find('"', setPos);
+                    if(closeQuote != std::string::npos){
+                        colValue = setClause.substr(setPos, closeQuote - setPos);
+                        setPos = closeQuote + 1;
+                    }
+                } else {
+                    size_t commaPos = setClause.find(',', setPos);
+                    if(commaPos != std::string::npos){
+                        colValue = trimSpace(setClause.substr(setPos, commaPos - setPos));
+                        setPos = commaPos;
+                    } else {
+                        colValue = trimSpace(setClause.substr(setPos));
+                        setPos = setClause.size();
+                    }
+                }
+                
+                if(setPos < setClause.size() && setClause[setPos] == ',') setPos++;
+                
+                cmd.columns.push_back({colName, ""});
+                cmd.values.push_back(colValue);
+            }
+            
+            return cmd;
+        }else if(std::regex_search(inputWithoutSpace,updateInfoCmd,regXEqual)){//equal
+            cmd.table = trimSpace(updateInfoCmd[1].str());
+            std::string setClause = trimSpace(updateInfoCmd[2].str());
+            cmd.whereColumn = trimSpace(updateInfoCmd[3].str());
+            std::string value1 = trimSpace(updateInfoCmd[4].str());
+            
+            if(!value1.empty() && value1.back() == ';') value1.pop_back();
+            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
+                value1 = value1.substr(1,value1.size()-2);
+            }
+
+            cmd.whereValue1 = value1;
+            cmd.op = "=";
+        
+            size_t setPos = 0;
+            while(setPos < setClause.size()){
+                size_t eqPos = setClause.find('=', setPos);
+                if(eqPos == std::string::npos) break;
+                
+                std::string colName = trimSpace(setClause.substr(setPos, eqPos - setPos));
+                setPos = eqPos + 1;
+                
+                while(setPos < setClause.size() && isspace(setClause[setPos])) setPos++;
+                
+                std::string colValue;
+                if(setPos < setClause.size() && setClause[setPos] == '"'){
+                    setPos++; 
+                    size_t closeQuote = setClause.find('"', setPos);
+                    if(closeQuote != std::string::npos){
+                        colValue = setClause.substr(setPos, closeQuote - setPos);
+                        setPos = closeQuote + 1;
+                    }
+                } else {
+                    size_t commaPos = setClause.find(',', setPos);
+                    if(commaPos != std::string::npos){
+                        colValue = trimSpace(setClause.substr(setPos, commaPos - setPos));
+                        setPos = commaPos;
+                    } else {
+                        colValue = trimSpace(setClause.substr(setPos));
+                        setPos = setClause.size();
+                    }
+                }
+                if(setPos < setClause.size() && setClause[setPos] == ',') setPos++;
+                
+                cmd.columns.push_back({colName, ""});
+                cmd.values.push_back(colValue);
+            }
+            
+            return cmd;
+            
+        }else{
+
+            cmd.isValid = false;
+            cmd.error = "Invalid UPDATE syntax";
             return cmd;
         }
 
