@@ -9,6 +9,7 @@ namespace Commands{
     };
 
     void setIndexMode(IndexMode type);
+    IndexMode getIndexMode();
     void initIndex();
     void execute(const ParsedCommand &cmd);
 

@@ -20,8 +20,7 @@ int main(){
     cin >> choice;
 
     string dummy;
-    getline(cin, dummy); // Clear the newline character from the input buffer
-
+    getline(cin, dummy); 
     if(choice == 1){
         Commands::setIndexMode(Commands::IndexMode::HASH);
         cout << "[INFO] Hashing index selected.\n";

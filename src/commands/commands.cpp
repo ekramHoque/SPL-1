@@ -17,6 +17,11 @@ static IndexMode globalMode = IndexMode::HASH;
 void Commands::setIndexMode(IndexMode type){
     globalMode = type;
 }
+
+IndexMode Commands::getIndexMode(){
+    return globalMode;
+}
+
 void Commands::initIndex(){};//later need
 void Commands::execute(const ParsedCommand &cmd){
 

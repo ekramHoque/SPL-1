@@ -113,8 +113,12 @@ ParsedCommand Parser::parse(const std::string &input){
         while(getline(allValues,separateValue,',')){
             separateValue = trimSpace(separateValue);
 
-            if(separateValue.size() >=2 && separateValue.front() == '"' && separateValue.back() == '"'){
-                separateValue = separateValue.substr(1,separateValue.size()-2);
+            // Remove surrounding quotes (both double quotes " and single quotes ')
+            if(separateValue.size() >=2){
+                if((separateValue.front() == '"' && separateValue.back() == '"') ||
+                   (separateValue.front() == '\'' && separateValue.back() == '\'')){
+                    separateValue = separateValue.substr(1,separateValue.size()-2);
+                }
             }
             cmd.values.push_back(separateValue);
         }
@@ -167,13 +171,19 @@ ParsedCommand Parser::parse(const std::string &input){
             if(!value1.empty() && value1.back() == ';') value1.pop_back();
             if(!value2.empty() && value2.back() == ';') value2.pop_back();
 
-            // Remove surrounding quotes
-            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
-                value1 = value1.substr(1,value1.size()-2);
+            // Remove surrounding quotes (both single and double)
+            if(value1.size() >= 2){
+                if((value1.front() == '"' && value1.back() == '"') ||
+                   (value1.front() == '\'' && value1.back() == '\'')){
+                    value1 = value1.substr(1,value1.size()-2);
+                }
             }
 
-            if(value2.size() >= 2 && value2.front() == '"' && value2.back() == '"'){
-                value2 = value2.substr(1,value2.size()-2);
+            if(value2.size() >= 2){
+                if((value2.front() == '"' && value2.back() == '"') ||
+                   (value2.front() == '\'' && value2.back() == '\'')){
+                    value2 = value2.substr(1,value2.size()-2);
+                }
             }
 
             cmd.whereValue1 = value1;
@@ -189,9 +199,12 @@ ParsedCommand Parser::parse(const std::string &input){
             // Remove trailing semicolon if present
             if(!value1.empty() && value1.back() == ';') value1.pop_back();
 
-            // Remove surrounding quotes
-            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
-                value1 = value1.substr(1,value1.size()-2);
+            // Remove surrounding quotes (both single and double)
+            if(value1.size() >= 2){
+                if((value1.front() == '"' && value1.back() == '"') ||
+                   (value1.front() == '\'' && value1.back() == '\'')){
+                    value1 = value1.substr(1,value1.size()-2);
+                }
             }
 
             cmd.whereValue1 = value1;
@@ -252,9 +265,11 @@ ParsedCommand Parser::parse(const std::string &input){
                 while(setPos < setClause.size() && isspace(setClause[setPos])) setPos++;
                 
                 std::string colValue;
-                if(setPos < setClause.size() && setClause[setPos] == '"'){
+                // Handle both single and double quotes
+                if(setPos < setClause.size() && (setClause[setPos] == '"' || setClause[setPos] == '\'')){
+                    char quoteChar = setClause[setPos];
                     setPos++; 
-                    size_t closeQuote = setClause.find('"', setPos);
+                    size_t closeQuote = setClause.find(quoteChar, setPos);
                     if(closeQuote != std::string::npos){
                         colValue = setClause.substr(setPos, closeQuote - setPos);
                         setPos = closeQuote + 1;
@@ -284,8 +299,11 @@ ParsedCommand Parser::parse(const std::string &input){
             std::string value1 = trimSpace(updateInfoCmd[4].str());
             
             if(!value1.empty() && value1.back() == ';') value1.pop_back();
-            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
-                value1 = value1.substr(1,value1.size()-2);
+            if(value1.size() >= 2){
+                if((value1.front() == '"' && value1.back() == '"') ||
+                   (value1.front() == '\'' && value1.back() == '\'')){
+                    value1 = value1.substr(1,value1.size()-2);
+                }
             }
 
             cmd.whereValue1 = value1;
@@ -302,9 +320,11 @@ ParsedCommand Parser::parse(const std::string &input){
                 while(setPos < setClause.size() && isspace(setClause[setPos])) setPos++;
                 
                 std::string colValue;
-                if(setPos < setClause.size() && setClause[setPos] == '"'){
+                // Handle both single and double quotes
+                if(setPos < setClause.size() && (setClause[setPos] == '"' || setClause[setPos] == '\'')){
+                    char quoteChar = setClause[setPos];
                     setPos++; 
-                    size_t closeQuote = setClause.find('"', setPos);
+                    size_t closeQuote = setClause.find(quoteChar, setPos);
                     if(closeQuote != std::string::npos){
                         colValue = setClause.substr(setPos, closeQuote - setPos);
                         setPos = closeQuote + 1;
@@ -355,12 +375,18 @@ ParsedCommand Parser::parse(const std::string &input){
             if(!value1.empty() && value1.back() == ';') value1.pop_back();
             if(!value2.empty() && value2.back() == ';') value2.pop_back();
 
-            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
-                value1 = value1.substr(1,value1.size()-2);
+            if(value1.size() >= 2){
+                if((value1.front() == '"' && value1.back() == '"') ||
+                   (value1.front() == '\'' && value1.back() == '\'')){
+                    value1 = value1.substr(1,value1.size()-2);
+                }
             }
 
-            if(value2.size() >= 2 && value2.front() == '"' && value2.back() == '"'){
-                value2 = value2.substr(1,value2.size()-2);
+            if(value2.size() >= 2){
+                if((value2.front() == '"' && value2.back() == '"') ||
+                   (value2.front() == '\'' && value2.back() == '\'')){
+                    value2 = value2.substr(1,value2.size()-2);
+                }
             }
 
             cmd.whereValue1 = value1;
@@ -373,8 +399,11 @@ ParsedCommand Parser::parse(const std::string &input){
             std::string value1 = trimSpace(deleteInfoCmd[3].str());
             
             if(!value1.empty() && value1.back() == ';') value1.pop_back();
-            if(value1.size() >= 2 && value1.front() == '"' && value1.back() == '"'){
-                value1 = value1.substr(1,value1.size()-2);
+            if(value1.size() >= 2){
+                if((value1.front() == '"' && value1.back() == '"') ||
+                   (value1.front() == '\'' && value1.back() == '\'')){
+                    value1 = value1.substr(1,value1.size()-2);
+                }
             }
 
             cmd.whereValue1 = value1;
